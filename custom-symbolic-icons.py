@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+#
+# NAME: Custom Symbolic Icons — Nautilus Python Extension
+# AUTHOR: Namey5
+# VERSION: 1.0
+# LICENSE: GNU General Public License v3.0
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# NAME: Custom Symbolic Icons
+# DESC: Customise symbolic icons for folders in Nautilus (i.e. bookmarks).
+# INSTALL:
+#   cp custom-symbolic-icons.py ~/.local/share/nautilus-python/extensions/
+#   nautilus -q
+# EXAMPLE:
+#   gio set ~/Games metadata::custom-symbolic-icon applications-games-symbolic
+
+import sys
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+from gi.repository import Gio, GLib, GObject, Gtk, Nautilus  # pyright: ignore[reportAttributeAccessIssue]
+
+
+class CustomSymbolicIcons(GObject.GObject, Nautilus.MenuProvider):
+    __gtype_name__ = "CustomSymbolicIcons"
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        GLib.timeout_add(500, self._update_icons)
+
+    def _update_icons(self) -> bool:
+        try:
+            windows = Gtk.Window.get_toplevels()
+            window_count = windows.get_n_items() if hasattr(windows, "get_n_items") else 0
+            for i in range(window_count):
+                window = windows.get_item(i)
+                if isinstance(window, Gtk.Window):
+                    self._process_tree(window)
+        except Exception as e:  # noqa: BLE001
+            print(f"[custom-symbolic-icons] error processing tree: {e}", file=sys.stderr)
+
+        return True
+
+    def _process_tree(self, widget: Gtk.Widget) -> None:
+        if type(widget).__name__ == "NautilusSidebarRow":
+            self._update_icon(widget)
+            return
+
+        child = widget.get_first_child()
+        while child is not None:
+            self._process_tree(child)
+            child = child.get_next_sibling()
+
+    def _update_icon(self, widget: Gtk.Widget) -> None:
+        try:
+            icon = widget.get_property("start-icon")
+            icon_names = icon.get_names()
+
+            uri = widget.get_property("uri")
+            file = Gio.File.new_for_uri(uri)
+            file_info = file.query_info("metadata::custom-symbolic-icon", Gio.FileQueryInfoFlags.NONE)
+            icon_name = file_info.get_attribute_as_string("metadata::custom-symbolic-icon")
+
+            if icon_name is not None and icon_name not in icon_names:
+                print(f"[custom-symbolic-icons] adding icon '{icon_name}' to file '{uri}' (existing: {icon_names})", file=sys.stderr)
+                icon.prepend_name(icon_name)
+
+                icon_widget = widget.get_template_child(
+                    GObject.GType.from_name("NautilusSidebarRow"),
+                    "start_icon_widget"
+                )
+                icon_widget.set_from_gicon(icon)
+        except Exception as e:  # noqa: BLE001, F841, S110
+            # print(f"[custom-symbolic-icons] error setting icon: '{e}'", file=sys.stderr)
+            pass
