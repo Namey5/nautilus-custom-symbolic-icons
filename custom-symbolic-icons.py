@@ -75,8 +75,9 @@ class CustomSymbolicIcons(GObject.GObject, Nautilus.MenuProvider):
             file_info = file.query_info("metadata::custom-symbolic-icon", Gio.FileQueryInfoFlags.NONE)
             icon_name = file_info.get_attribute_as_string("metadata::custom-symbolic-icon")
 
-            if icon_name is not None and icon_name not in icon_names:
+            if icon_name is not None and (len(icon_names) == 0 or icon_name != icon_names[0]):
                 print(f"[custom-symbolic-icons] adding icon '{icon_name}' to file '{uri}' (existing: {icon_names})", file=sys.stderr)
+                # Limited manipulation of this list, so just always prepend if not the first icon.
                 icon.prepend_name(icon_name)
 
                 icon_widget = widget.get_template_child(

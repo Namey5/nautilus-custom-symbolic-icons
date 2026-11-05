@@ -19,4 +19,3 @@ There is currently no UI for overriding icons directly in Nautilus, but you can 
 # gio set [FOLDER PATH] metadata::custom-symbolic-icon [ICON NAME]
 gio set ~/Games metadata::custom-symbolic-icon applications-games-symbolic
 ```
-If you do this a bunch for the same folder you might need to restart Nautilus to see the updates.
