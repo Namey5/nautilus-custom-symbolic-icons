@@ -87,3 +87,9 @@ class CustomSymbolicIcons(GObject.GObject, Nautilus.MenuProvider):
         except Exception as e:  # noqa: BLE001, F841, S110
             # print(f"[custom-symbolic-icons] error setting icon: '{e}'", file=sys.stderr)
             pass
+
+    def get_file_items(self, *args):  # pyright: ignore[reportUnusedParameter]
+        return []
+
+    def get_background_items(self, *args):  # pyright: ignore[reportUnusedParameter]
+        return []
