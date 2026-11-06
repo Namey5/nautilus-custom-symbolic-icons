@@ -2,7 +2,7 @@
 #
 # NAME: Custom Symbolic Icons — Nautilus Python Extension
 # AUTHOR: Namey5
-# VERSION: 1.0
+# VERSION: v1.1.0
 # LICENSE: GNU General Public License v3.0
 #
 # This program is free software: you can redistribute it and/or modify
