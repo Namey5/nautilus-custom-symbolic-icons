@@ -31,7 +31,8 @@ import sys
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gio, GLib, GObject, Gtk, Nautilus  # pyright: ignore[reportAttributeAccessIssue]
+gi.require_version("Adw", "1")
+from gi.repository import Adw, Gio, GLib, GObject, Gtk, Nautilus  # pyright: ignore[reportAttributeAccessIssue]
 
 
 class CustomSymbolicIcons(GObject.GObject, Nautilus.MenuProvider):
@@ -89,8 +90,50 @@ class CustomSymbolicIcons(GObject.GObject, Nautilus.MenuProvider):
             # print(f"[custom-symbolic-icons] error setting icon: '{e}'", file=sys.stderr)
             pass
 
-    def get_file_items(self, *args):  # pyright: ignore[reportUnusedParameter]
+    def get_file_items(self, files: list[Nautilus.FileInfo]) -> list[Nautilus.MenuItem]:
+        if len(files) != 1:
+            return []
+
+        file = files[0]
+        menuitem = Nautilus.MenuItem(
+            name="CustomSymbolicIcons::icon-name",
+            label="Set Symbolic Icon...",
+        )
+        menuitem.connect("activate", self._show_file_icon_setter, file)
+        return [menuitem]
+
+    def get_background_items(self, folder: Nautilus.FileInfo) -> list[Nautilus.MenuItem]:
         return []
 
-    def get_background_items(self, *args):  # pyright: ignore[reportUnusedParameter]
-        return []
+    def _show_file_icon_setter(self, menuitem: Nautilus.MenuItem, file: Nautilus.FileInfo) -> None:
+        file = Gio.File.new_for_uri(file.get_uri())
+        file_info = file.query_info("metadata::custom-symbolic-icon", Gio.FileQueryInfoFlags.NONE)
+        icon_name = file_info.get_attribute_as_string("metadata::custom-symbolic-icon")
+
+        window = Gtk.Window.new()
+        window.set_modal(True)
+        window.set_transient_for(Gio.Application.get_default().get_active_window())
+        window.set_decorated(True)
+        window.set_resizable(False)
+        window.set_title("Symbolic Icon")
+
+        box = Gtk.ListBox.new()
+        window.set_child(box)
+
+        entry = Adw.EntryRow.new()
+        entry.set_title("Icon Name")
+        entry.set_show_apply_button(True)
+        if icon_name is not None:
+            entry.set_text(icon_name)
+        entry.connect("apply", self._set_file_icon, window, file)
+        box.append(entry)
+
+        window.present()
+
+    def _set_file_icon(self, entry: Adw.EntryRow, window: Gtk.Window, file: Nautilus.FileInfo) -> None:
+        print(f"[custom-symbolic-icons] setting icon '{entry.get_text()}' for file '{file.get_uri()}'", file=sys.stderr)
+
+        file = Gio.File.new_for_uri(file.get_uri())
+        file.set_attribute_string("metadata::custom-symbolic-icon", entry.get_text(), Gio.FileQueryInfoFlags.NONE)
+
+        window.close()
