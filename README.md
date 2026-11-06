@@ -3,6 +3,8 @@ Nautilus/GNOME Files extension to add custom symbolic icons to folder bookmarks.
 <img width="1373" height="790" alt="Screenshot From 2026-11-05 15-31-44" src="https://github.com/user-attachments/assets/1af728e7-0a8b-4c1d-8f80-75545a3d415e" />
 
 ## Installation
+Requires [nautilus-python](https://gitlab.gnome.org/GNOME/nautilus-python) (available in various package managers).
+
 Copy `custom-symbolic-icons.py` to the `nautilus-python` extensions folder:
 ```bash
 cp custom-symbolic-icons.py ~/.local/share/nautilus-python/extensions/
