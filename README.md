@@ -28,3 +28,7 @@ Alternatively, you can add it to the metadata attribute `custom-symbolic-icon` d
 gio set ~/Games metadata::custom-symbolic-icon applications-games-symbolic
 ```
 
+## Known Issues
+- Small delay when first opening Nautilus for icons to update.
+- Setting an icon might not update on other open windows.
+- Clearing an icon won't update until you open a new window.
